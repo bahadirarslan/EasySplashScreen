@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:core';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class EasySplashScreen extends StatefulWidget {
   /// App title, shown in the middle of screen in case of no image available
@@ -48,6 +49,8 @@ class EasySplashScreen extends StatefulWidget {
   /// If both futureNavigator and navigator are provided, futureNavigator will take priority
   final Future<Object>? futureNavigator;
 
+  final Future? futureGoRouter;
+
   EasySplashScreen({
     this.loaderColor = Colors.black,
     this.futureNavigator,
@@ -56,6 +59,7 @@ class EasySplashScreen extends StatefulWidget {
     required this.logo,
     this.logoWidth = 50,
     this.title,
+    this.futureGoRouter,
     this.backgroundColor = Colors.white,
     this.loadingText = const Text(''),
     this.loadingTextPadding = const EdgeInsets.only(top: 10.0),
@@ -72,26 +76,30 @@ class _EasySplashScreenState extends State<EasySplashScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.futureNavigator == null) {
-      Timer(Duration(seconds: widget.durationInSeconds), () {
-        if (widget.navigator is String) {
-          Navigator.of(context).pushReplacementNamed(
-            widget.navigator as String,
-          );
-        } else if (widget.navigator is Widget) {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => widget.navigator as Widget));
-        }
+    if (widget.futureGoRouter != null) {
+      widget.futureGoRouter!.then((value) {
+        context.goNamed(value);
       });
     } else {
-      widget.futureNavigator!.then((_route) {
-        if (_route is String) {
-          Navigator.of(context).pushReplacementNamed(_route);
-        } else if (_route is Widget) {
-          Navigator.of(context)
-              .pushReplacement(MaterialPageRoute(builder: (context) => _route));
-        }
-      });
+      if (widget.futureNavigator == null) {
+        Timer(Duration(seconds: widget.durationInSeconds), () {
+          if (widget.navigator is String) {
+            Navigator.of(context).pushReplacementNamed(
+              widget.navigator as String,
+            );
+          } else if (widget.navigator is Widget) {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => widget.navigator as Widget));
+          }
+        });
+      } else {
+        widget.futureNavigator!.then((_route) {
+          if (_route is String) {
+            Navigator.of(context).pushNamed(_route);
+          } else if (_route is Widget) {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => _route));
+          }
+        });
+      }
     }
   }
 
